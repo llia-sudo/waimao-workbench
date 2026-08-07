@@ -1,0 +1,13 @@
+{
+  "name": "waimao-workbench",
+  "version": "1.0.0",
+  "description": "外贸跟单工作台 - 带密码保护的服务端版本",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "localtunnel": "^2.0.2"
+  }
+}
