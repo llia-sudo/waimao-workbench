@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>外贸跟单工作台</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#f472b6;--primary-light:#fdf2f8;--success:#5ebd8b;--success-light:#edfaf3;
+  --warning:#f59e0b;--warning-light:#fff8eb;--danger:#f87171;--danger-light:#fef2f2;
+  --gray-50:#fdf2f8;--gray-100:#fce7f3;--gray-200:#fbcfe8;--gray-300:#f9a8d4;
+  --gray-400:#c4b5bd;--gray-500:#9d8d95;--gray-600:#756b70;--gray-700:#554c50;
+  --gray-800:#383336;--gray-900:#211d1f;
+  --radius:14px;--radius-sm:10px;--shadow:0 2px 8px rgba(244,114,182,.08),0 1px 3px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(244,114,182,.1),0 2px 6px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 24px rgba(244,114,182,.12),0 6px 12px rgba(0,0,0,.06);
+  --transition:.25s ease;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC",sans-serif;
+  background:linear-gradient(135deg,#fdf2f8 0%,#fff5f9 30%,#fef8fb 60%,#fff 100%);color:var(--gray-800);line-height:1.6;min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+.header{
+  background:#fff;border-bottom:1px solid #fbcfe8;padding:12px 20px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(244,114,182,.08);
+}
+.header-left{display:flex;align-items:center;gap:10px}
+.header-logo{width:32px;height:32px}
+.header-title{font-size:18px;font-weight:700;color:var(--gray-900)}
+.header-sub{font-size:12px;color:var(--gray-500);margin-left:4px}
+.header-actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:500;cursor:pointer;transition:var(--transition);
+  border:1px solid transparent;white-space:nowrap;min-height:36px;
+  font-family:inherit;
+}
+.btn svg{width:15px;height:15px;flex-shrink:0}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:#ec4899;border-color:#ec4899;box-shadow:0 4px 12px rgba(244,114,182,.35)}
+.btn-outline{background:#fff;color:var(--gray-700);border-color:var(--gray-200)}
+.btn-outline:hover{background:var(--primary-light);border-color:var(--primary)}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{background:#4aa878;box-shadow:0 4px 12px rgba(94,189,139,.3)}
+.btn-danger{background:#fff;color:var(--danger);border-color:#fca5a5}
+.btn-danger:hover{background:var(--danger-light);border-color:var(--danger);box-shadow:0 4px 12px rgba(248,113,113,.25)}
+.btn-sm{padding:4px 10px;font-size:12px;min-height:30px}
+.btn-xs{padding:2px 8px;font-size:11px;min-height:26px;border-radius:4px}
+.btn-icon{padding:6px;min-width:36px;justify-content:center}
+
+.alert-strip{
+  margin:0;padding:10px 20px;display:flex;align-items:center;gap:8px;
+  font-size:13px;cursor:pointer;transition:var(--transition);
+  border-bottom:1px solid transparent;
+}
+.alert-strip.has-urgent{background:var(--danger-light);border-color:#fecaca;color:var(--danger)}
+.alert-strip.has-today{background:var(--warning-light);border-color:#fde68a;color:#b45309}
+.alert-strip.clean{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+.alert-strip svg{width:18px;height:18px;flex-shrink:0}
+.alert-badge{
+  display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;
+  border-radius:11px;font-size:11px;font-weight:700;padding:0 7px;
+}
+.alert-badge.danger{background:var(--danger);color:#fff}
+.alert-badge.warning{background:var(--warning);color:#fff}
+
+.layout{display:flex;height:calc(100vh - 125px);overflow:hidden}
+.sidebar{
+  width:280px;min-width:280px;background:#fff;border-right:1px solid #fbcfe8;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sidebar-header{
+  padding:14px 16px;border-bottom:1px solid #fbcfe8;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sidebar-title{font-size:14px;font-weight:600;color:var(--gray-800)}
+.sidebar-count{font-size:12px;color:var(--gray-400)}
+.order-list{flex:1;overflow-y:auto;padding:8px}
+.order-item{
+  padding:12px 14px;border-radius:var(--radius);cursor:pointer;
+  transition:var(--transition);margin-bottom:4px;position:relative;
+  border:2px solid transparent;
+}
+.order-item:hover{background:var(--primary-light)}
+.order-item.active{background:var(--primary-light);border-color:var(--primary)}
+.order-item-no{font-size:13px;font-weight:600;color:var(--gray-800)}
+.order-item-client{font-size:12px;color:var(--gray-600);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order-item-stage{
+  font-size:13px;margin-top:6px;display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:10px;font-weight:600;
+}
+.order-item-actions{display:flex;gap:4px;margin-top:6px}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.main-scroll{flex:1;overflow-y:auto;padding:20px}
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;color:var(--gray-400);text-align:center;gap:12px;
+}
+.empty-state svg{width:60px;height:60px;opacity:.4}
+.empty-state p{font-size:14px}
+
+.order-detail-header{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  gap:12px;margin-bottom:20px;
+}
+.order-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.order-no-display{font-size:20px;font-weight:700;color:var(--gray-900)}
+.order-client-display{font-size:14px;color:var(--gray-600)}
+.order-product{font-size:13px;color:var(--gray-500)}
+.stage-badge{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
+  border-radius:14px;font-size:12px;font-weight:600;
+}
+
+.stage-timeline{display:flex;gap:0;margin-bottom:24px;overflow-x:auto;padding:4px 0}
+.stage-step{
+  flex:1;min-width:70px;text-align:center;position:relative;cursor:pointer;
+  padding:0 2px;
+}
+.stage-step-dot{
+  width:38px;height:38px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;transition:var(--transition);position:relative;z-index:1;
+}
+.stage-step-line{
+  position:absolute;top:19px;height:3px;z-index:0;
+}
+.stage-step:first-child .stage-step-line{left:50%;right:0}
+.stage-step:last-child .stage-step-line{left:0;right:50%}
+.stage-step:not(:first-child):not(:last-child) .stage-step-line{left:0;right:0}
+.stage-step-label{font-size:13px;color:var(--gray-600);margin-top:6px;line-height:1.3;font-weight:500}
+.stage-step.active .stage-step-label{color:var(--primary);font-weight:600}
+.stage-step.past .stage-step-dot{background:var(--success);color:#fff}
+.stage-step.active .stage-step-dot{background:var(--primary);color:#fff;box-shadow:0 0 0 4px var(--primary-light)}
+.stage-step.future .stage-step-dot{background:#fce7f3;color:#f472b6}
+.stage-step.past .stage-step-line{background:var(--success)}
+.stage-step.active .stage-step-line{background:var(--primary)}
+.stage-step.future .stage-step-line{background:#fce7f3}
+
+.section-title{
+  font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:20px}
+.doc-card{
+  background:#fff;border-radius:var(--radius);padding:14px 16px;
+  box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;
+  transition:var(--transition);border-left:3px solid var(--gray-300);
+}
+.doc-card.essential{border-left-color:var(--primary)}
+.doc-card.ready{border-left-color:var(--success);background:var(--success-light)}
+.doc-card.skipped{opacity:.5}
+.doc-card-name{font-size:14px;font-weight:500;color:var(--gray-800)}
+.doc-card-tag{
+  font-size:11px;padding:2px 6px;border-radius:4px;font-weight:500;
+}
+.doc-card-tag.ready-tag{background:var(--success);color:#fff}
+.doc-card-tag.pending-tag{background:var(--warning);color:#fff}
+.doc-card-tag.skip-tag{background:var(--gray-300);color:var(--gray-600)}
+.doc-card-actions{display:flex;gap:4px}
+
+.overdue-doc{background:var(--danger-light);border-left-color:var(--danger)!important}
+.overdue-doc .doc-card-name{color:var(--danger)}
+.overdue-badge{
+  display:inline-flex;align-items:center;gap:2px;font-size:10px;padding:1px 6px;
+  border-radius:8px;background:var(--danger);color:#fff;font-weight:600;margin-left:6px;
+}
+
+.notes-area{margin-top:20px;background:#fff;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.notes-area textarea{
+  width:100%;min-height:80px;border:1px solid #fbcfe8;border-radius:var(--radius-sm);
+  padding:10px 12px;font-size:14px;font-family:inherit;resize:vertical;
+  color:var(--gray-800);transition:var(--transition);
+}
+.notes-area textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
+.notes-label{font-size:13px;font-weight:600;color:var(--gray-600);margin-bottom:8px}
+
+.modal-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);
+  z-index:200;display:flex;align-items:center;justify-content:center;
+}
+.modal{
+  background:#fff;border-radius:var(--radius);padding:24px;width:90%;max-width:440px;
+  max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg);
+}
+.modal h3{font-size:17px;font-weight:700;margin-bottom:16px;color:var(--gray-900)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:4px}
+.form-group input,.form-group select{
+  width:100%;  padding:9px 12px;border:1px solid #fbcfe8;border-radius:var(--radius-sm);
+  font-size:14px;font-family:inherit;color:var(--gray-800);transition:var(--transition);
+}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+.stage-select-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.stage-pill{
+  padding:6px 14px;border-radius:16px;font-size:12px;font-weight:500;
+  cursor:pointer;border:1px solid #fbcfe8;background:#fff;color:var(--gray-700);
+  transition:var(--transition);
+}
+.stage-pill:hover{border-color:var(--primary);color:var(--primary)}
+.stage-pill.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:300;
+  background:var(--gray-700);color:#fff;padding:10px 20px;border-radius:20px;
+  font-size:13px;box-shadow:0 4px 16px rgba(244,114,182,.25);animation:toastIn .3s ease;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:250;display:flex;align-items:center;justify-content:center}
+.confirm-box{
+  background:#fff;border-radius:var(--radius);padding:24px;width:90%;max-width:380px;text-align:center;
+}
+.confirm-box p{font-size:14px;color:var(--gray-700);margin:12px 0 20px}
+.confirm-box .btn-group{display:flex;gap:8px;justify-content:center}
+
+@media(max-width:768px){
+  .layout{flex-direction:column;height:auto}
+  .sidebar{width:100%;min-width:unset;max-height:180px;border-right:none;border-bottom:1px solid #fbcfe8}
+  .main-scroll{padding:12px}
+  .order-detail-header{flex-direction:column;align-items:flex-start}
+  .doc-grid{grid-template-columns:1fr}
+  .stage-timeline{gap:0;}
+  .stage-step{min-width:56px}
+  .stage-step-label{font-size:10px}
+  .header{padding:8px 12px}
+  .header-title{font-size:15px}
+  .btn{font-size:11px;padding:5px 10px;min-height:32px}
+  .btn svg{width:13px;height:13px}
+  .alert-strip{padding:8px 12px;font-size:12px}
+  .modal{padding:16px;width:95%}
+}
+@media(max-width:480px){
+  .stage-step{min-width:48px}
+  .stage-step-label{font-size:9px}
+  .stage-step-dot{width:26px;height:26px;font-size:12px}
+  .stage-step-line{top:13px;height:2px}
+  .order-no-display{font-size:16px}
+  .header-actions{gap:3px}
+  .btn{padding:4px 8px;font-size:10px;min-height:28px}
+}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#f9a8d4;border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:#f472b6}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <svg class="header-logo" viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="8" fill="#f472b6"/>
+      <path d="M8 12h16M8 16h12M8 20h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="23" cy="10" r="3" fill="#fde047"/>
+    </svg>
+    <span class="header-title">外贸跟单工作台</span>
+    <span class="header-sub">Document Tracking</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline btn-sm" onclick="exportJSON()" title="导出 JSON 备份">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      导出备份
+    </button>
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()" title="导入 JSON 恢复">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      导入恢复
+    </button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="btn btn-outline btn-sm" onclick="clearExamples()" id="clearExamplesBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      清空示例
+    </button>
+    <button class="btn btn-outline btn-sm" onclick="doLogout()" title="退出登录" style="border-color:#fca5a5;color:#f87171">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      退出
+    </button>
+  </div>
+</div>
+
+<div class="alert-strip clean" id="alertStrip" onclick="toggleAlertDetail()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="alertIcon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <span id="alertText">加载中...</span>
+  <span id="alertBadge" style="margin-left:auto"></span>
+</div>
+
+<div id="alertDetail" style="display:none;padding:12px 20px;background:#fff;border-bottom:1px solid #fbcfe8;max-height:300px;overflow-y:auto"></div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">订单列表</span>
+      <span class="sidebar-count" id="orderCount">0 个订单</span>
+    </div>
+    <div class="order-list" id="orderList"></div>
+    <div style="padding:10px" id="sidebarFooter">
+      <button class="btn btn-primary btn-sm" style="width:100%" onclick="showAddOrderModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        新建订单
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="main-scroll" id="mainContent"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="orderModal" style="display:none" onclick="if(event.target===this)closeModal('orderModal')">
+  <div class="modal">
+    <h3 id="orderModalTitle">新建订单</h3>
+    <input type="hidden" id="editOrderId">
+    <div class="form-group">
+      <label>订单号 *</label>
+      <input type="text" id="inputOrderNo" placeholder="例如：PO2026001">
+    </div>
+    <div class="form-group">
+      <label>客户名称 *</label>
+      <input type="text" id="inputClient" placeholder="例如：ABC Trading Co.">
+    </div>
+    <div class="form-group">
+      <label>产品描述</label>
+      <input type="text" id="inputProduct" placeholder="例如：Stainless Steel Cookware Set">
+    </div>
+    <div class="form-group">
+      <label>当前节点 *</label>
+      <div class="stage-select-pills" id="stagePills"></div>
+    </div>
+    <div class="form-group">
+      <label>预计出货日期 (ETA)</label>
+      <input type="date" id="inputETA">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('orderModal')">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveOrder()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirmDialog" style="display:none">
+  <div class="confirm-box">
+    <svg viewBox="0 0 48 48" fill="none" width="40" height="40" style="margin:0 auto">
+      <circle cx="24" cy="24" r="22" stroke="#f87171" stroke-width="2.5"/>
+      <line x1="24" y1="14" x2="24" y2="28" stroke="#f87171" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="24" cy="34" r="2" fill="#f87171"/>
+    </svg>
+    <p id="confirmMsg"></p>
+    <div class="btn-group">
+      <button class="btn btn-outline btn-sm" onclick="closeConfirm()">取消</button>
+      <button class="btn btn-danger btn-sm" id="confirmOkBtn">确认</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="display:none"></div>
+
+<script>
+// ==================== STAGE DEFINITIONS ====================
+var STAGES = [
+  {
+    id:'confirmation',name:'接单确认',
+    docs:[
+      {name:'PI（形式发票）',key:'pi',essential:true}
+    ]
+  },
+  {
+    id:'production',name:'生产备货',
+    docs:[
+      {name:'内销合同',key:'domestic_contract',essential:true},
+      {name:'工厂出货',key:'factory_ship',essential:true}
+    ]
+  },
+  {
+    id:'data_check',name:'初核数据',
+    docs:[
+      {name:'工厂箱单内容核对',key:'factory_pl_check',essential:true}
+    ]
+  },
+  {
+    id:'booking',name:'订舱 / 托书',
+    docs:[
+      {name:'托书',key:'booking_note',essential:true},
+      {name:'进仓单 / 装柜通知',key:'warehouse_notice',essential:true}
+    ]
+  },
+  {
+    id:'customs',name:'报关装船',
+    docs:[
+      {name:'报关单',key:'customs_decl',essential:true},
+      {name:'产地证',key:'co',essential:false},
+      {name:'保险单',key:'insurance',essential:false}
+    ]
+  },
+  {
+    id:'client_docs',name:'客户单据',
+    docs:[
+      {name:'CI（商业发票）',key:'ci',essential:true},
+      {name:'PL（装箱单）',key:'pl',essential:true},
+      {name:'检测报告',key:'test_report',essential:true},
+      {name:'BL（提单）',key:'bl',essential:true},
+      {name:'Shipping Advice（装船通知）',key:'ship_advice',essential:false}
+    ]
+  },
+  {
+    id:'presentation',name:'交单结汇',
+    docs:[
+      {name:'全套客户单据整理',key:'full_client_docs',essential:true},
+      {name:'全套交单单据',key:'full_bank_docs',essential:true}
+    ]
+  },
+  {
+    id:'payment',name:'收汇核销',
+    docs:[
+      {name:'货代费用付款',key:'forwarder_payment',essential:true},
+      {name:'水单',key:'bank_slip',essential:true},
+      {name:'电放',key:'telex_release',essential:true}
+    ]
+  }
+];
+
+var STAGE_COLORS = {
+  confirmation:{bg:'#fdf2f8',text:'#be185d',dot:'#f472b6'},
+  production:{bg:'#fff1f2',text:'#be123c',dot:'#fb7185'},
+  booking:{bg:'#fdf4ff',text:'#a21caf',dot:'#d946ef'},
+  data_check:{bg:'#f5f3ff',text:'#6d28d9',dot:'#a78bfa'},
+  customs:{bg:'#ecfdf5',text:'#047857',dot:'#34d399'},
+  client_docs:{bg:'#fff7ed',text:'#c2410c',dot:'#fb923c'},
+  presentation:{bg:'#fefce8',text:'#a16207',dot:'#facc15'},
+  payment:{bg:'#f0fdf4',text:'#15803d',dot:'#4ade80'}
+};
+
+// ==================== DATA ====================
+var orders = [];
+var archiveOrders = [];
+var selectedOrderId = null;
+var currentView = 'active';
+
+// API helper — auto redirect to login on 401
+function apiFetch(url, method, body, callback){
+  var xhr = new XMLHttpRequest();
+  xhr.open(method, url, true);
+  if(body){
+    xhr.setRequestHeader('Content-Type', 'application/json');
+  }
+  xhr.onload = function(){
+    if(xhr.status === 401){
+      window.location.href = '/login.html';
+      return;
+    }
+    if(xhr.status >= 200 && xhr.status < 300){
+      try{
+        var data = JSON.parse(xhr.responseText);
+        callback(null, data);
+      }catch(e){
+        callback(null, xhr.responseText);
+      }
+    }else{
+      callback(new Error('Request failed: ' + xhr.status), null);
+    }
+  };
+  xhr.onerror = function(){
+    callback(new Error('Network error'), null);
+  };
+  if(body){
+    xhr.send(JSON.stringify(body));
+  }else{
+    xhr.send();
+  }
+}
+
+// ==================== EXAMPLE DATA ====================
+function getExampleOrders(){
+  var now = Date.now();
+  function ds(ts){return new Date(ts).toISOString().split('T')[0];}
+  return [
+    {
+      id:'ex1',orderNo:'PO2026001',client:'ABC Trading Co., Ltd.',product:'Stainless Steel Cookware Set',
+      currentStage:'confirmation',eta:ds(now+21*86400000),
+      docStatus:{confirmation_pi:'pending'},
+      notes:'新客户首单，需确认付款方式 T/T 30% deposit',createdAt:ds(now-2*86400000)
+    },
+    {
+      id:'ex2',orderNo:'PO2026002',client:'XYZ Import Ltd.',product:'LED Panel Light 600x600',
+      currentStage:'booking',eta:ds(now+10*86400000),
+      docStatus:{
+        confirmation_pi:'ready',
+        production_domestic_contract:'ready',production_factory_ship:'ready',
+        data_check_factory_pl_check:'ready',
+        booking_booking_note:'ready',booking_warehouse_notice:'pending'
+      },
+      notes:'已向货代发托书，等进仓单回传',createdAt:ds(now-12*86400000)
+    },
+    {
+      id:'ex3',orderNo:'PO2026003',client:'Global Merchants Inc.',product:'Outdoor Furniture Set',
+      currentStage:'client_docs',eta:ds(now+1*86400000),
+      docStatus:{
+        confirmation_pi:'ready',
+        production_domestic_contract:'ready',production_factory_ship:'ready',
+        booking_booking_note:'ready',booking_warehouse_notice:'ready',
+        data_check_factory_pl_check:'ready',
+        customs_customs_decl:'ready',customs_co:'ready',customs_insurance:'skip',
+        client_docs_ci:'ready',client_docs_pl:'ready',client_docs_test_report:'pending',client_docs_bl:'pending',client_docs_ship_advice:'pending'
+      },
+      notes:'船期明天！BL 正本还没拿到，检测报告也没出来，紧急！',createdAt:ds(now-35*86400000)
+    },
+    {
+      id:'ex4',orderNo:'PO2026004',client:'Summit Retail Group',product:'Cotton T-Shirts (MOQ 5000)',
+      currentStage:'production',eta:ds(now+28*86400000),
+      docStatus:{
+        confirmation_pi:'ready',
+        production_domestic_contract:'ready',production_factory_ship:'pending'
+      },
+      notes:'工厂排期中，预计下周出货',createdAt:ds(now-7*86400000)
+    }
+  ];
+}
+
+function dateStr(ts){return new Date(ts).toISOString().split('T')[0];}
+
+// ==================== INIT ====================
+function init(){
+  // Load from server
+  var loaded = 0;
+  function checkDone(){
+    loaded++;
+    if(loaded >= 2){
+      if(orders.length === 0 && archiveOrders.length === 0){
+        orders = getExampleOrders();
+        saveData(function(){
+          selectFirstAndRender();
+        });
+      }else{
+        selectFirstAndRender();
+      }
+    }
+  }
+  function selectFirstAndRender(){
+    if(currentView === 'active' && orders.length > 0 && !selectedOrderId) selectedOrderId = orders[0].id;
+    if(currentView === 'archive' && archiveOrders.length > 0 && !selectedOrderId) selectedOrderId = archiveOrders[0].id;
+    renderAll();
+  }
+
+  apiFetch('/api/orders', 'GET', null, function(err, data){
+    if(!err && Array.isArray(data)) orders = data;
+    checkDone();
+  });
+  apiFetch('/api/archive', 'GET', null, function(err, data){
+    if(!err && Array.isArray(data)) archiveOrders = data;
+    checkDone();
+  });
+}
+
+function saveData(callback){
+  var saved = 0;
+  function done(){
+    saved++;
+    if(saved >= 2 && callback) callback();
+  }
+  apiFetch('/api/orders', 'POST', orders, function(err, data){
+    if(err){ showToast('保存失败，请检查网络'); }
+    done();
+  });
+  apiFetch('/api/archive', 'POST', archiveOrders, function(err, data){
+    if(err){ showToast('保存归档失败'); }
+    done();
+  });
+}
+
+// ==================== RENDER ALL ====================
+function renderAll(){
+  renderAlertStrip();
+  renderOrderList();
+  renderMainContent();
+  renderSidebarFooter();
+}
+
+// ==================== ALERT STRIP ====================
+function getTodoItems(){
+  var today = dateStr(Date.now());
+  var urgent = [];
+  var normal = [];
+  var activeOrders = (currentView === 'archive') ? [] : orders;
+
+  for(var oi=0; oi<activeOrders.length; oi++){
+    var order = activeOrders[oi];
+    var stageIdx = -1;
+    for(var si=0; si<STAGES.length; si++){
+      if(STAGES[si].id === order.currentStage){stageIdx=si;break;}
+    }
+    if(stageIdx < 0) continue;
+
+    var currentStage = STAGES[stageIdx];
+    for(var di=0; di<currentStage.docs.length; di++){
+      var doc = currentStage.docs[di];
+      var statusKey = order.currentStage + '_' + doc.key;
+      var status = order.docStatus[statusKey] || 'pending';
+      if(status === 'pending'){
+        var item = {
+          orderId:order.id, orderNo:order.orderNo, client:order.client,
+          stageId:order.currentStage, stageName:currentStage.name,
+          docName:doc.name, docKey:doc.key, essential:doc.essential, type:'current'
+        };
+        if(order.eta){
+          var daysUntilETA = Math.ceil((new Date(order.eta) - new Date(today)) / 86400000);
+          if(daysUntilETA <= 3) urgent.push({urgent:true,days:daysUntilETA,item:item});
+          else normal.push(item);
+        } else {
+          normal.push(item);
+        }
+      }
+    }
+
+    for(var pi=0; pi<stageIdx; pi++){
+      var prevStage = STAGES[pi];
+      for(var pdi=0; pdi<prevStage.docs.length; pdi++){
+        var pdoc = prevStage.docs[pdi];
+        var psk = prevStage.id + '_' + pdoc.key;
+        var pst = order.docStatus[psk] || 'pending';
+        if(pst === 'pending'){
+          urgent.push({urgent:true,overdue:true,item:{
+            orderId:order.id, orderNo:order.orderNo, client:order.client,
+            stageId:prevStage.id, stageName:prevStage.name,
+            docName:pdoc.name, docKey:pdoc.key, essential:pdoc.essential,
+            type:'overdue'
+          }});
+        }
+      }
+    }
+  }
+
+  return {urgent:urgent, normal:normal};
+}
+
+function renderAlertStrip(){
+  var result = getTodoItems();
+  var urgent = result.urgent;
+  var normal = result.normal;
+  var strip = document.getElementById('alertStrip');
+  var icon = document.getElementById('alertIcon');
+  var text = document.getElementById('alertText');
+  var badge = document.getElementById('alertBadge');
+
+  strip.className = 'alert-strip';
+  if(urgent.length > 0){
+    strip.classList.add('has-urgent');
+    icon.innerHTML = '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2"/>';
+    text.textContent = urgent.length + ' 项逾期/紧急单证需要处理';
+    badge.innerHTML = '<span class="alert-badge danger">' + urgent.length + '</span>';
+  }else if(normal.length > 0){
+    strip.classList.add('has-today');
+    icon.innerHTML = '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2"/>';
+    text.textContent = normal.length + ' 项当前节点单证待准备';
+    badge.innerHTML = '<span class="alert-badge warning">' + normal.length + '</span>';
+  }else{
+    strip.classList.add('clean');
+    icon.innerHTML = '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><polyline points="9 12 11 14 15 10" stroke="currentColor" stroke-width="2"/>';
+    text.textContent = '所有当前节点单证已就绪，继续保持！';
+    badge.innerHTML = '';
+  }
+}
+
+function toggleAlertDetail(){
+  var detail = document.getElementById('alertDetail');
+  if(detail.style.display === 'none'){
+    renderAlertDetail();
+    detail.style.display = 'block';
+  }else{
+    detail.style.display = 'none';
+  }
+}
+
+function renderAlertDetail(){
+  var result = getTodoItems();
+  var urgent = result.urgent;
+  var normal = result.normal;
+  var detail = document.getElementById('alertDetail');
+  var html = '';
+
+  if(urgent.length > 0){
+    html += '<div style="font-size:13px;font-weight:600;color:var(--danger);margin-bottom:8px">逾期/紧急（需立即处理）</div>';
+    for(var ui=0; ui<urgent.length; ui++){
+      var u = urgent[ui];
+      var item = u.item;
+      var urgencyText = u.overdue ? '逾期未完成' : (u.days <= 0 ? '已到期！' : u.days + '天后出货');
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--danger-light);border-radius:6px;margin-bottom:4px;font-size:12px">';
+      html += '<div><b>' + item.orderNo + '</b> ' + item.client + ' · ' + item.stageName + '<br>' + item.docName + ' <span style="color:var(--danger);font-weight:600">' + urgencyText + '</span></div>';
+      html += '<button class="btn btn-xs btn-danger" onclick="quickJump(\'' + item.orderId + '\',\'' + item.stageId + '\');document.getElementById(\'alertDetail\').style.display=\'none\'">去处理</button>';
+      html += '</div>';
+    }
+  }
+
+  if(normal.length > 0){
+    html += '<div style="font-size:13px;font-weight:600;color:var(--warning);margin:12px 0 8px">当前节点待准备单证</div>';
+    for(var ni=0; ni<normal.length; ni++){
+      var item = normal[ni];
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--warning-light);border-radius:6px;margin-bottom:4px;font-size:12px">';
+      html += '<div><b>' + item.orderNo + '</b> ' + item.client + ' · ' + item.stageName + '<br>' + item.docName + '</div>';
+      html += '<button class="btn btn-xs btn-outline" onclick="quickJump(\'' + item.orderId + '\',\'' + item.stageId + '\');document.getElementById(\'alertDetail\').style.display=\'none\'">去处理</button>';
+      html += '</div>';
+    }
+  }
+
+  if(urgent.length === 0 && normal.length === 0){
+    html = '<div style="text-align:center;color:var(--gray-400);font-size:13px;padding:10px">没有待处理项，太棒了！</div>';
+  }
+
+  detail.innerHTML = html;
+}
+
+function quickJump(orderId, stageId){
+  selectedOrderId = orderId;
+  renderAll();
+  setTimeout(function(){
+    var el = document.getElementById('stage-' + stageId);
+    if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+  }, 200);
+}
+
+// ==================== ORDER LIST ====================
+function renderOrderList(){
+  var container = document.getElementById('orderList');
+  var countEl = document.getElementById('orderCount');
+  var list = (currentView === 'archive') ? archiveOrders : orders;
+  countEl.textContent = (currentView === 'archive' ? '归档 · ' : '') + list.length + ' 个订单';
+
+  if(list.length === 0){
+    var msg = (currentView === 'archive') ? '暂无归档订单' : '暂无订单';
+    container.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:20px;font-size:13px">' + msg + '</div>';
+    return;
+  }
+
+  var html = '';
+  for(var oi=0; oi<list.length; oi++){
+    var order = list[oi];
+    var stage = null;
+    for(var si=0; si<STAGES.length; si++){if(STAGES[si].id===order.currentStage){stage=STAGES[si];break;}}
+    var stageName = stage ? stage.name : order.currentStage;
+    var colors = STAGE_COLORS[order.currentStage] || {bg:'#f3f4f6',text:'#374151'};
+    var active = (order.id === selectedOrderId) ? ' active' : '';
+
+    var stageIdx = -1;
+    for(var si2=0; si2<STAGES.length; si2++){if(STAGES[si2].id===order.currentStage){stageIdx=si2;break;}}
+    var pendingCount = 0, overdueCount = 0;
+    if(stageIdx >= 0){
+      var cs = STAGES[stageIdx];
+      for(var di=0; di<cs.docs.length; di++){
+        var sk = order.currentStage + '_' + cs.docs[di].key;
+        if((order.docStatus[sk]||'pending') === 'pending') pendingCount++;
+      }
+      for(var pi=0; pi<stageIdx; pi++){
+        var ps = STAGES[pi];
+        for(var pdi=0; pdi<ps.docs.length; pdi++){
+          var psk = ps.id + '_' + ps.docs[pdi].key;
+          if((order.docStatus[psk]||'pending') === 'pending') overdueCount++;
+        }
+      }
+    }
+
+    var badges = '';
+    if(overdueCount > 0) badges += '<span style="font-size:10px;color:#fff;background:var(--danger);padding:1px 5px;border-radius:6px;margin-left:4px">' + overdueCount + '逾期</span>';
+    if(pendingCount > 0) badges += '<span style="font-size:10px;color:#fff;background:var(--warning);padding:1px 5px;border-radius:6px;margin-left:4px">' + pendingCount + '待办</span>';
+
+    html += '<div class="order-item' + active + '" onclick="selectOrder(\'' + order.id + '\')">';
+    html += '<div class="order-item-no">' + order.orderNo + badges + '</div>';
+    html += '<div class="order-item-client">' + order.client + '</div>';
+    html += '<div class="order-item-stage" style="background:' + colors.bg + ';color:' + colors.text + '">' + stageName + '</div>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function selectOrder(id){
+  selectedOrderId = id;
+  renderAll();
+}
+
+function renderSidebarFooter(){
+  var footer = document.getElementById('sidebarFooter');
+  if(currentView === 'archive'){
+    footer.innerHTML = '<div style="display:flex;gap:6px">'+
+      '<button class="btn btn-outline btn-sm" style="flex:1" onclick="switchView(\'active\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg> 返回订单</button>'+
+      '</div>';
+  }else{
+    var archiveBadge = archiveOrders.length > 0 ? ' <span style="font-size:10px;color:#8b5cf6">(' + archiveOrders.length + ')</span>' : '';
+    footer.innerHTML = '<div style="display:flex;gap:6px">'+
+      '<button class="btn btn-primary btn-sm" style="flex:1" onclick="showAddOrderModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 新建订单</button>'+
+      '<button class="btn btn-outline btn-sm" style="flex:none" onclick="switchView(\'archive\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg> 归档' + archiveBadge + '</button>'+
+      '</div>';
+  }
+}
+
+// ==================== MAIN CONTENT ====================
+function renderMainContent(){
+  var container = document.getElementById('mainContent');
+
+  // No orders → show empty state
+  var viewList = (currentView === 'archive') ? archiveOrders : orders;
+  if(viewList.length === 0){
+    container.innerHTML = '<div class="empty-state" style="display:flex">'+
+      '<svg viewBox="0 0 80 80" fill="none"><rect x="15" y="20" width="50" height="45" rx="6" stroke="#9ca3af" stroke-width="2.5"/>'+
+      '<line x1="25" y1="32" x2="55" y2="32" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>'+
+      '<line x1="25" y1="40" x2="55" y2="40" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>'+
+      '<line x1="25" y1="48" x2="40" y2="48" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>'+
+      '<circle cx="60" cy="18" r="10" fill="#f472b6" stroke="#fff" stroke-width="2"/>'+
+      '<line x1="56" y1="18" x2="64" y2="18" stroke="#fff" stroke-width="2" stroke-linecap="round"/>'+
+      '<line x1="60" y1="14" x2="60" y2="22" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>'+
+      '<p>还没有订单，点击「新建订单」开始</p></div>';
+    return;
+  }
+
+  var order = null;
+  for(var oi=0; oi<viewList.length; oi++){
+    if(viewList[oi].id === selectedOrderId){order=viewList[oi];break;}
+  }
+  if(!order) order = viewList[0];
+
+  var stageIdx = -1;
+  for(var si=0; si<STAGES.length; si++){if(STAGES[si].id===order.currentStage){stageIdx=si;break;}}
+  var currentStage = STAGES[stageIdx];
+  var colors = STAGE_COLORS[order.currentStage] || {bg:'#f3f4f6',text:'#374151',dot:'#6b7280'};
+
+  var html = '';
+
+  // Header
+  html += '<div class="order-detail-header">';
+  html += '<div class="order-meta">';
+  html += '<span class="order-no-display">' + order.orderNo + '</span>';
+  html += '<span class="order-client-display">' + order.client + '</span>';
+  if(order.product) html += '<span class="order-product">' + order.product + '</span>';
+  html += '<span class="stage-badge" style="background:' + colors.bg + ';color:' + colors.text + '">' + currentStage.name + '</span>';
+  if(currentView === 'archive') html += '<span style="font-size:11px;color:var(--gray-400)">归档于 ' + (order.archivedAt || '') + '</span>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:6px">';
+  if(currentView === 'archive'){
+    html += '<button class="btn btn-success btn-sm" onclick="restoreOrder(\'' + order.id + '\')">恢复订单</button>';
+  } else {
+    html += '<button class="btn btn-outline btn-sm" onclick="advanceStage(\'' + order.id + '\')"' + (stageIdx >= STAGES.length-1 ? ' disabled' : '') + '>推进到下一节点</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="editOrder(\'' + order.id + '\')">编辑</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="archiveOrder(\'' + order.id + '\')" style="color:#8b5cf6;border-color:#c4b5fe">归档</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="confirmDeleteOrder(\'' + order.id + '\')" style="color:var(--danger);border-color:#fca5a5">删除</button>';
+  }
+  html += '</div>';
+  html += '</div>';
+
+  // ETA info
+  if(order.eta){
+    var daysLeft = Math.ceil((new Date(order.eta) - new Date(dateStr(Date.now()))) / 86400000);
+    var etaStyle = '', etaText = '';
+    if(daysLeft < 0){etaStyle='color:var(--danger)';etaText='已逾期'+Math.abs(daysLeft)+'天';}
+    else if(daysLeft === 0){etaStyle='color:var(--danger)';etaText='今天出货！';}
+    else if(daysLeft <= 3){etaStyle='color:var(--warning)';etaText='距出货还有 '+daysLeft+' 天';}
+    else{etaStyle='color:var(--gray-500)';etaText='距出货还有 '+daysLeft+' 天';}
+    html += '<div style="font-size:12px;' + etaStyle + ';margin-bottom:16px">ETA: ' + order.eta + ' · ' + etaText + '</div>';
+  }
+
+  // Stage timeline
+  html += '<div class="stage-timeline">';
+  for(var ti=0; ti<STAGES.length; ti++){
+    var stage = STAGES[ti];
+    var cls = 'stage-step';
+    if(ti < stageIdx) cls += ' past';
+    else if(ti === stageIdx) cls += ' active';
+    else cls += ' future';
+    html += '<div class="' + cls + '" id="stage-' + stage.id + '" onclick="jumpToStage(\'' + order.id + '\',\'' + stage.id + '\')">';
+    html += '<div style="position:relative;display:inline-block">';
+    html += '<div class="stage-step-line"></div>';
+    html += '<div class="stage-step-dot">' + (ti < stageIdx ? '&#10003;' : (ti+1)) + '</div>';
+    html += '</div>';
+    html += '<div class="stage-step-label">' + stage.name + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Current stage documents
+  html += '<div class="section-title">' + currentStage.name + ' — 需要准备的单证</div>';
+  html += '<div class="doc-grid">';
+
+  var currentAllDone = true;
+  for(var cdi=0; cdi<currentStage.docs.length; cdi++){
+    var doc = currentStage.docs[cdi];
+    var statusKey = order.currentStage + '_' + doc.key;
+    var status = order.docStatus[statusKey] || 'pending';
+    if(status !== 'ready' && status !== 'skip') currentAllDone = false;
+
+    var cardClass = 'doc-card';
+    if(doc.essential) cardClass += ' essential';
+    if(status === 'ready') cardClass += ' ready';
+    if(status === 'skip') cardClass += ' skipped';
+
+    var tagHtml = '';
+    if(status === 'ready') tagHtml = '<span class="doc-card-tag ready-tag">已准备</span>';
+    else if(status === 'pending') tagHtml = '<span class="doc-card-tag pending-tag">待准备</span>';
+    else if(status === 'skip') tagHtml = '<span class="doc-card-tag skip-tag">已跳过</span>';
+
+    html += '<div class="' + cardClass + '">';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div class="doc-card-name">' + doc.name + (doc.essential ? ' <span style="font-size:10px;color:var(--primary);font-weight:600">[必]</span>' : '') + '</div>';
+    html += '</div>';
+    html += '<div class="doc-card-actions">';
+    html += tagHtml;
+    if(status !== 'ready'){
+      html += '<button class="btn btn-xs btn-success" onclick="markDoc(\'' + order.id + '\',\'' + order.currentStage + '\',\'' + doc.key + '\',\'ready\')" title="标记已完成">&#10003;</button>';
+    }
+    if(status !== 'skip'){
+      html += '<button class="btn btn-xs btn-outline" onclick="markDoc(\'' + order.id + '\',\'' + order.currentStage + '\',\'' + doc.key + '\',\'skip\')" title="跳过此项">跳过</button>';
+    }
+    if(status !== 'pending'){
+      html += '<button class="btn btn-xs btn-outline" onclick="markDoc(\'' + order.id + '\',\'' + order.currentStage + '\',\'' + doc.key + '\',\'pending\')" title="重置">重置</button>';
+    }
+    html += '</div></div>';
+  }
+  html += '</div>';
+
+  if(currentAllDone && stageIdx < STAGES.length - 1){
+    html += '<div style="text-align:center;padding:12px;background:var(--success-light);border-radius:var(--radius);margin-bottom:16px;font-size:13px;color:var(--success)">当前节点单证已全部就绪，可以推进到下一节点了！</div>';
+  }
+
+  // Previous stages with incomplete docs (overdue)
+  for(var pi=0; pi<stageIdx; pi++){
+    var prevStage = STAGES[pi];
+    var incompleteDocs = [];
+    for(var pdi=0; pdi<prevStage.docs.length; pdi++){
+      var pdoc = prevStage.docs[pdi];
+      var psk = prevStage.id + '_' + pdoc.key;
+      var pst = order.docStatus[psk] || 'pending';
+      if(pst === 'pending') incompleteDocs.push(pdoc);
+    }
+    if(incompleteDocs.length > 0){
+      html += '<div class="section-title" style="color:var(--danger)">' + prevStage.name + ' — 逾期未完成的单证</div>';
+      html += '<div class="doc-grid">';
+      for(var idi=0; idi<incompleteDocs.length; idi++){
+        var idoc = incompleteDocs[idi];
+        html += '<div class="doc-card overdue-doc">';
+        html += '<div style="flex:1;min-width:0">';
+        html += '<div class="doc-card-name">' + idoc.name + '<span class="overdue-badge">逾期</span>' + (idoc.essential ? ' <span style="font-size:10px;color:var(--danger);font-weight:600">[必]</span>' : '') + '</div>';
+        html += '</div>';
+        html += '<div class="doc-card-actions">';
+        html += '<button class="btn btn-xs btn-success" onclick="markDoc(\'' + order.id + '\',\'' + prevStage.id + '\',\'' + idoc.key + '\',\'ready\')">&#10003; 补完成</button>';
+        html += '<button class="btn btn-xs btn-outline" onclick="markDoc(\'' + order.id + '\',\'' + prevStage.id + '\',\'' + idoc.key + '\',\'skip\')">跳过</button>';
+        html += '</div></div>';
+      }
+      html += '</div>';
+    }
+  }
+
+  // Completed stages summary
+  html += '<details style="margin-bottom:16px"><summary style="font-size:13px;font-weight:600;color:var(--gray-600);cursor:pointer;padding:8px 0">已完成的历史节点</summary>';
+  html += '<div class="doc-grid">';
+  for(var hi=0; hi<stageIdx; hi++){
+    var hStage = STAGES[hi];
+    for(var hdi=0; hdi<hStage.docs.length; hdi++){
+      var hdoc = hStage.docs[hdi];
+      var hsk = hStage.id + '_' + hdoc.key;
+      var hst = order.docStatus[hsk] || 'pending';
+      if(hst === 'ready'){
+        html += '<div class="doc-card" style="opacity:.7;border-left-color:var(--success)">';
+        html += '<div class="doc-card-name" style="font-size:12px">' + hStage.name + ' · ' + hdoc.name + '</div>';
+        html += '<span class="doc-card-tag ready-tag" style="font-size:10px">已完成</span>';
+        html += '</div>';
+      }
+    }
+  }
+  html += '</div></details>';
+
+  // Notes
+  html += '<div class="notes-area">';
+  html += '<div class="notes-label">备注</div>';
+  html += '<textarea placeholder="添加订单备注...（失焦自动保存）" onblur="saveNote(\'' + order.id + '\',this.value)">' + (order.notes || '') + '</textarea>';
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+function markDoc(orderId, stageId, docKey, status){
+  var order = null;
+  for(var oi=0; oi<orders.length; oi++){if(orders[oi].id===orderId){order=orders[oi];break;}}
+  if(!order) return;
+  var statusKey = stageId + '_' + docKey;
+  order.docStatus[statusKey] = status;
+  saveData();
+  renderAll();
+}
+
+function saveNote(orderId, note){
+  var order = null;
+  for(var oi=0; oi<orders.length; oi++){if(orders[oi].id===orderId){order=orders[oi];break;}}
+  if(!order) return;
+  order.notes = note;
+  saveData();
+}
+
+function advanceStage(orderId){
+  var order = null;
+  for(var oi=0; oi<orders.length; oi++){if(orders[oi].id===orderId){order=orders[oi];break;}}
+  if(!order) return;
+  var stageIdx = -1;
+  for(var si=0; si<STAGES.length; si++){if(STAGES[si].id===order.currentStage){stageIdx=si;break;}}
+  if(stageIdx < 0 || stageIdx >= STAGES.length - 1){
+    showToast('已经是最后一个节点');
+    return;
+  }
+  order.currentStage = STAGES[stageIdx+1].id;
+  saveData();
+  renderAll();
+  showToast('已推进到：' + STAGES[stageIdx+1].name);
+}
+
+function jumpToStage(orderId, stageId){
+  var order = null;
+  for(var oi=0; oi<orders.length; oi++){if(orders[oi].id===orderId){order=orders[oi];break;}}
+  if(!order) return;
+  order.currentStage = stageId;
+  saveData();
+  renderAll();
+  showToast('已切换到：' + (function(){
+    for(var si=0; si<STAGES.length; si++){if(STAGES[si].id===stageId) return STAGES[si].name;}
+    return stageId;
+  })());
+}
+
+// ==================== ORDER CRUD ====================
+var editingStage = 'confirmation';
+
+function showAddOrderModal(){
+  document.getElementById('orderModalTitle').textContent = '新建订单';
+  document.getElementById('editOrderId').value = '';
+  document.getElementById('inputOrderNo').value = '';
+  document.getElementById('inputClient').value = '';
+  document.getElementById('inputProduct').value = '';
+  document.getElementById('inputETA').value = '';
+  editingStage = 'confirmation';
+  renderStagePills();
+  document.getElementById('orderModal').style.display = 'flex';
+}
+
+function editOrder(orderId){
+  var order = null;
+  for(var oi=0; oi<orders.length; oi++){if(orders[oi].id===orderId){order=orders[oi];break;}}
+  if(!order) return;
+  document.getElementById('orderModalTitle').textContent = '编辑订单';
+  document.getElementById('editOrderId').value = orderId;
+  document.getElementById('inputOrderNo').value = order.orderNo;
+  document.getElementById('inputClient').value = order.client;
+  document.getElementById('inputProduct').value = order.product || '';
+  document.getElementById('inputETA').value = order.eta || '';
+  editingStage = order.currentStage;
+  renderStagePills();
+  document.getElementById('orderModal').style.display = 'flex';
+}
+
+function renderStagePills(){
+  var container = document.getElementById('stagePills');
+  var html = '';
+  for(var si=0; si<STAGES.length; si++){
+    var s = STAGES[si];
+    var cls = (s.id === editingStage) ? 'stage-pill selected' : 'stage-pill';
+    html += '<span class="' + cls + '" onclick="editingStage=\'' + s.id + '\';renderStagePills()">' + s.name + '</span>';
+  }
+  container.innerHTML = html;
+}
+
+function saveOrder(){
+  var id = document.getElementById('editOrderId').value;
+  var orderNo = document.getElementById('inputOrderNo').value.trim();
+  var client = document.getElementById('inputClient').value.trim();
+  var product = document.getElementById('inputProduct').value.trim();
+  var eta = document.getElementById('inputETA').value;
+
+  if(!orderNo || !client){showToast('订单号和客户名称为必填');return;}
+
+  if(id){
+    var order = null;
+    for(var oi=0; oi<orders.length; oi++){if(orders[oi].id===id){order=orders[oi];break;}}
+    if(!order) return;
+    order.orderNo = orderNo;
+    order.client = client;
+    order.product = product;
+    order.eta = eta;
+    order.currentStage = editingStage;
+    // Ensure all stage docs have entries
+    for(var si=0; si<STAGES.length; si++){
+      var s = STAGES[si];
+      for(var di=0; di<s.docs.length; di++){
+        var sk = s.id + '_' + s.docs[di].key;
+        if(!(sk in order.docStatus)) order.docStatus[sk] = 'pending';
+      }
+    }
+  }else{
+    var docStatus = {};
+    for(var si2=0; si2<STAGES.length; si2++){
+      var s2 = STAGES[si2];
+      for(var di2=0; di2<s2.docs.length; di2++){
+        docStatus[s2.id + '_' + s2.docs[di2].key] = 'pending';
+      }
+    }
+    var newOrder = {
+      id: 'o' + Date.now(),
+      orderNo: orderNo,
+      client: client,
+      product: product,
+      currentStage: editingStage,
+      eta: eta,
+      docStatus: docStatus,
+      notes: '',
+      createdAt: dateStr(Date.now())
+    };
+    orders.push(newOrder);
+    selectedOrderId = newOrder.id;
+  }
+
+  saveData();
+  closeModal('orderModal');
+  renderAll();
+  showToast('订单已保存');
+}
+
+function confirmDeleteOrder(orderId){
+  var list = (currentView === 'archive') ? archiveOrders : orders;
+  var order = null;
+  for(var oi=0; oi<list.length; oi++){if(list[oi].id===orderId){order=list[oi];break;}}
+  if(!order) return;
+  document.getElementById('confirmMsg').textContent = '确认删除订单 ' + order.orderNo + '？此操作不可恢复。';
+  document.getElementById('confirmOkBtn').onclick = function(){
+    deleteOrder(orderId);closeConfirm();
+  };
+  document.getElementById('confirmDialog').style.display = 'flex';
+}
+
+function deleteOrder(orderId){
+  var list = (currentView === 'archive') ? archiveOrders : orders;
+  var newList = [];
+  for(var oi=0; oi<list.length; oi++){
+    if(list[oi].id !== orderId) newList.push(list[oi]);
+  }
+  if(currentView === 'archive'){ archiveOrders = newList; }
+  else { orders = newList; }
+  if(selectedOrderId === orderId){
+    var targetList = (currentView === 'archive') ? archiveOrders : orders;
+    selectedOrderId = targetList.length > 0 ? targetList[0].id : null;
+  }
+  saveData();
+  renderAll();
+  showToast('订单已删除');
+}
+
+function archiveOrder(orderId){
+  var target = null, targetIdx = -1;
+  for(var oi=0; oi<orders.length; oi++){if(orders[oi].id===orderId){target=orders[oi];targetIdx=oi;break;}}
+  if(!target) return;
+  target.archivedAt = dateStr(Date.now());
+  archiveOrders.push(target);
+  orders.splice(targetIdx,1);
+  if(selectedOrderId === orderId){ selectedOrderId = orders.length > 0 ? orders[0].id : null; }
+  saveData();
+  renderAll();
+  showToast(target.orderNo + ' 已归档');
+}
+
+function restoreOrder(orderId){
+  var target = null, targetIdx = -1;
+  for(var oi=0; oi<archiveOrders.length; oi++){if(archiveOrders[oi].id===orderId){target=archiveOrders[oi];targetIdx=oi;break;}}
+  if(!target) return;
+  delete target.archivedAt;
+  orders.push(target);
+  archiveOrders.splice(targetIdx,1);
+  selectedOrderId = target.id;
+  switchView('active');
+  saveData();
+  renderAll();
+  showToast(target.orderNo + ' 已恢复');
+}
+
+function switchView(view){
+  currentView = view;
+  if(view === 'active'){ selectedOrderId = orders.length > 0 ? orders[0].id : null; }
+  else { selectedOrderId = archiveOrders.length > 0 ? archiveOrders[0].id : null; }
+  renderAll();
+}
+
+function closeConfirm(){
+  document.getElementById('confirmDialog').style.display = 'none';
+}
+
+function doLogout(){
+  document.getElementById('confirmMsg').textContent = '确认退出登录？';
+  document.getElementById('confirmOkBtn').onclick = function(){
+    apiFetch('/api/logout', 'POST', {}, function(){
+      window.location.href = '/login.html';
+    });
+    closeConfirm();
+  };
+  document.getElementById('confirmDialog').style.display = 'flex';
+}
+
+// ==================== MODAL ====================
+function closeModal(id){
+  document.getElementById(id).style.display = 'none';
+}
+
+// ==================== EXPORT / IMPORT ====================
+function exportJSON(){
+  try{
+    var exportData = { orders: orders, archiveOrders: archiveOrders };
+    var data = JSON.stringify(exportData, null, 2);
+    var blob = new Blob([data], { type:'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'waimao-orders-backup-' + dateStr(Date.now()) + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('数据已导出（含 ' + orders.length + ' 活跃 + ' + archiveOrders.length + ' 归档）');
+  }catch(e){
+    showToast('导出失败');
+  }
+}
+
+function importJSON(event){
+  var file = event.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var raw = JSON.parse(e.target.result);
+      var importOrders = [], importArchive = [];
+      if(Array.isArray(raw)){
+        // Backward compatible: flat array
+        importOrders = raw;
+      }else{
+        importOrders = raw.orders || [];
+        importArchive = raw.archiveOrders || [];
+      }
+      document.getElementById('confirmMsg').textContent = '即将导入 ' + importOrders.length + ' 条活跃订单 + ' + importArchive.length + ' 条归档订单。将覆盖当前数据。确认导入？';
+      document.getElementById('confirmOkBtn').onclick = function(){
+        orders = importOrders;
+        archiveOrders = importArchive;
+        currentView = 'active';
+        selectedOrderId = orders.length > 0 ? orders[0].id : null;
+        saveData(function(){
+          renderAll();
+          closeConfirm();
+          showToast('成功导入 ' + orders.length + ' + ' + archiveOrders.length + ' 条订单');
+        });
+      };
+      document.getElementById('confirmDialog').style.display = 'flex';
+    }catch(err){
+      showToast('导入失败：文件格式不正确');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearExamples(){
+  var hasExample = false;
+  for(var oi=0; oi<orders.length; oi++){if(orders[oi].id.indexOf('ex')===0){hasExample=true;break;}}
+  if(!hasExample){showToast('没有示例数据需要清除');return;}
+  document.getElementById('confirmMsg').textContent = '确认清除所有示例数据？已有的非示例订单会保留。';
+  document.getElementById('confirmOkBtn').onclick = function(){
+    var newOrders = [];
+    for(var oi2=0; oi2<orders.length; oi2++){
+      if(orders[oi2].id.indexOf('ex')!==0) newOrders.push(orders[oi2]);
+    }
+    orders = newOrders;
+    selectedOrderId = orders.length > 0 ? orders[0].id : null;
+    saveData();
+    renderAll();
+    closeConfirm();
+    showToast('示例数据已清除');
+  };
+  document.getElementById('confirmDialog').style.display = 'flex';
+}
+
+// ==================== TOAST ====================
+var toastTimer = null;
+function showToast(msg){
+  var toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){toast.style.display = 'none';}, 2500);
+}
+
+// ==================== STARTUP ====================
+init();
+</script>
+</body>
+</html>
