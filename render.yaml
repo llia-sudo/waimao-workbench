@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: waimao-workbench
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /login.html
+    envVars:
+      - key: NODE_VERSION
+        value: "22.22.2"
+      - key: PASSWORD
+        value: "siyueyue"
