@@ -72,7 +72,7 @@ body{
 
 .layout{display:flex;height:calc(100vh - 137px);overflow:hidden}
 .sidebar{
-  width:280px;min-width:280px;background:#fff;border-right:1px solid #fbcfe8;
+  width:320px;min-width:320px;background:#fff;border-right:1px solid #fbcfe8;
   display:flex;flex-direction:column;overflow:hidden;
 }
 .sidebar-header{
@@ -83,20 +83,46 @@ body{
 .sidebar-count{font-size:12px;color:var(--gray-400)}
 .order-list{flex:1;overflow-y:auto;padding:8px 8px 72px}
 .order-item{
-  padding:12px 14px;border-radius:var(--radius);cursor:pointer;
-  transition:var(--transition);margin-bottom:4px;position:relative;
+  padding:7px 10px;border-radius:var(--radius);cursor:pointer;
+  transition:var(--transition);margin-bottom:0;position:relative;
   border:2px solid transparent;
+  display:flex;align-items:flex-start;gap:7px;
 }
 .order-item:hover{background:var(--primary-light)}
 .order-item.active{background:var(--primary-light);border-color:var(--primary)}
-.order-item-no{font-size:13px;font-weight:600;color:var(--gray-800)}
-.order-item-client{font-size:12px;color:var(--gray-600);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order-item + .order-item{margin-top:11px;padding-top:11px}
+.order-item + .order-item::before{content:"";position:absolute;top:-6px;left:0;right:0;height:1px;background:#eef2f7}
+.drag-handle{
+  flex:0 0 auto;width:14px;align-self:stretch;display:flex;align-items:center;justify-content:center;
+  color:#ec9ec9;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+}
+.drag-handle:active{cursor:grabbing}
+.drag-handle svg{width:13px;height:13px;display:block}
+.order-item-main{flex:1;min-width:0}
+.o-line1{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;line-height:1.35}
+.o-line2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:5px;line-height:1.3}
+.order-item-no{font-size:14px;font-weight:600;color:var(--gray-800)}
+.order-item-client{font-size:12.5px;color:var(--gray-600);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order-item-product{font-size:12px;color:var(--gray-500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order-item-ship{font-size:12px;color:#db2777;display:flex;align-items:center;gap:3px;flex:0 0 auto}
+.order-item-ship svg{width:11px;height:11px;flex:0 0 auto}
 .order-item-stage{
-  font-size:13px;margin-top:6px;display:inline-flex;align-items:center;gap:5px;
-  padding:4px 10px;border-radius:10px;font-weight:600;
+  font-size:11px;flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;
+  padding:2px 8px;border-radius:9px;font-weight:600;white-space:nowrap;
 }
 .order-item-actions{display:flex;gap:4px;margin-top:6px}
-.sidebar-footer{position:fixed;left:0;bottom:0;width:280px;border-top:2px solid #fbcfe8;background:linear-gradient(180deg,#fff 0%,#fdf2f8 100%);padding:12px;z-index:10}
+.order-item-placeholder{background:#fce7f3;border:2px dashed #f9a8d4;border-radius:var(--radius);margin-bottom:0;box-sizing:border-box}
+.drag-ghost{position:fixed;z-index:9999;pointer-events:none;background:#fff;border:2px solid var(--primary);border-radius:var(--radius);box-shadow:0 10px 28px rgba(236,72,153,.25);padding:7px 10px;box-sizing:border-box;opacity:.97}
+/* search box */
+.sidebar-search{position:relative;padding:8px 12px;border-bottom:1px solid #fbcfe8;background:#fff}
+.sidebar-search svg{position:absolute;left:22px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#ec4899;opacity:.55;pointer-events:none}
+.sidebar-search input{
+  width:100%;box-sizing:border-box;border:1px solid #fbcfe8;border-radius:9px;
+  padding:7px 10px 7px 30px;font-size:13px;background:#fdf2f8;color:var(--gray-800);outline:none;
+}
+.sidebar-search input:focus{border-color:var(--primary);background:#fff}
+.sidebar-search input::placeholder{color:#d6a5c4}
+.sidebar-footer{position:fixed;left:0;bottom:0;width:320px;border-top:2px solid #fbcfe8;background:linear-gradient(180deg,#fff 0%,#fdf2f8 100%);padding:12px;z-index:10}
 .sidebar-footer .btn{min-height:42px;font-size:14px}
 
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
@@ -116,6 +142,7 @@ body{
 .order-no-display{font-size:20px;font-weight:700;color:var(--gray-900)}
 .order-client-display{font-size:14px;color:var(--gray-600)}
 .order-product{font-size:13px;color:var(--gray-500)}
+.order-ship-meta{font-size:13px;color:#db2777}
 .stage-badge{
   display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
   border-radius:14px;font-size:12px;font-weight:600;
@@ -438,6 +465,10 @@ body{
       <span class="sidebar-title">订单列表</span>
       <span class="sidebar-count" id="orderCount">0 个订单</span>
     </div>
+    <div class="sidebar-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="orderSearch" type="text" placeholder="搜索订单号/客户/产品" oninput="onOrderSearch(this.value)">
+    </div>
     <div class="order-list" id="orderList"></div>
     <div class="sidebar-footer" id="sidebarFooter">
       <button class="btn btn-primary btn-sm" style="width:100%" onclick="showAddOrderModal()">
@@ -517,8 +548,12 @@ body{
       <div class="stage-select-pills" id="stagePills"></div>
     </div>
     <div class="form-group">
-      <label>预计出货日期 (ETA)</label>
+      <label>预计出货日期</label>
       <input type="date" id="inputETA">
+    </div>
+    <div class="form-group">
+      <label>船期（开船日）</label>
+      <input type="date" id="inputShipDate">
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closeModal('orderModal')">取消</button>
@@ -588,19 +623,6 @@ function doLogout(){
   };
   document.getElementById('confirmDialog').style.display = 'flex';
 }
-
-// Auto-check auth on page load (server-backed cookie)
-(function(){
-  fetch('/api/me').then(function(r){
-    if(r.ok){
-      document.getElementById('loginOverlay').classList.add('hidden');
-      window._appInited = true;
-      init();
-    }
-  }).catch(function(){
-    // server unreachable / not authed -> show login overlay (default visible)
-  });
-})();
 
 // Enter key to login
 document.getElementById('loginPwd').addEventListener('keydown', function(e){
@@ -686,6 +708,7 @@ var orders = [];
 var archiveOrders = [];
 var selectedOrderId = null;
 var currentView = 'active'; // 'active' or 'archive'
+var orderSearchQuery = '';
 var STORAGE_KEY = 'wb_waimao_orders_v2';
 var ARCHIVE_KEY = 'wb_waimao_archive_v2';
 
@@ -696,13 +719,13 @@ function getExampleOrders(){
   return [
     {
       id:'ex1',orderNo:'PO2026001',client:'ABC Trading Co., Ltd.',product:'Stainless Steel Cookware Set',
-      currentStage:'confirmation',eta:ds(now+21*86400000),
+      currentStage:'confirmation',eta:ds(now+21*86400000),shipDate:ds(now+18*86400000),
       docStatus:{confirmation_pi:'pending'},
       notes:'新客户首单，需确认付款方式 T/T 30% deposit',createdAt:ds(now-2*86400000)
     },
     {
       id:'ex2',orderNo:'PO2026002',client:'XYZ Import Ltd.',product:'LED Panel Light 600x600',
-      currentStage:'booking',eta:ds(now+10*86400000),
+      currentStage:'booking',eta:ds(now+10*86400000),shipDate:ds(now+8*86400000),
       docStatus:{
         confirmation_pi:'ready',
         production_domestic_contract:'ready',production_factory_ship:'ready',
@@ -713,7 +736,7 @@ function getExampleOrders(){
     },
     {
       id:'ex3',orderNo:'PO2026003',client:'Global Merchants Inc.',product:'Outdoor Furniture Set',
-      currentStage:'client_docs',eta:ds(now+1*86400000),
+      currentStage:'client_docs',eta:ds(now+1*86400000),shipDate:ds(now+1*86400000),
       docStatus:{
         confirmation_pi:'ready',
         production_domestic_contract:'ready',production_factory_ship:'ready',
@@ -726,7 +749,7 @@ function getExampleOrders(){
     },
     {
       id:'ex4',orderNo:'PO2026004',client:'Summit Retail Group',product:'Cotton T-Shirts (MOQ 5000)',
-      currentStage:'production',eta:ds(now+28*86400000),
+      currentStage:'production',eta:ds(now+28*86400000),shipDate:ds(now+25*86400000),
       docStatus:{
         confirmation_pi:'ready',
         production_domestic_contract:'ready',production_factory_ship:'pending'
@@ -757,16 +780,35 @@ function init(){
   });
 }
 
+function normalizeOrders(list){
+  if(!Array.isArray(list)) return;
+  for(var i=0;i<list.length;i++){
+    if(!list[i].docStatus) list[i].docStatus = {};
+  }
+}
+
 // Load from server (Gist-backed); fall back to localStorage cache if offline
 function loadRemote(cb){
+  if(location.protocol === 'file:'){
+    try{ var s = localStorage.getItem(STORAGE_KEY); if(s) orders = JSON.parse(s); }catch(e){ orders = orders || []; }
+    try{ var sa = localStorage.getItem(ARCHIVE_KEY); if(sa) archiveOrders = JSON.parse(sa); }catch(e){ archiveOrders = archiveOrders || []; }
+    normalizeOrders(orders);
+    normalizeOrders(archiveOrders);
+    cb();
+    return;
+  }
   fetch('/api/data').then(function(r){ return r.json(); }).then(function(data){
     orders = Array.isArray(data.orders) ? data.orders : [];
     archiveOrders = Array.isArray(data.archiveOrders) ? data.archiveOrders : [];
+    normalizeOrders(orders);
+    normalizeOrders(archiveOrders);
     cacheLocal();
     cb();
   }).catch(function(){
     try{ var s = localStorage.getItem(STORAGE_KEY); if(s) orders = JSON.parse(s); }catch(e){ orders = orders || []; }
     try{ var sa = localStorage.getItem(ARCHIVE_KEY); if(sa) archiveOrders = JSON.parse(sa); }catch(e){ archiveOrders = archiveOrders || []; }
+    normalizeOrders(orders);
+    normalizeOrders(archiveOrders);
     cb();
   });
 }
@@ -794,6 +836,7 @@ function applyDeepLink(){
 
 function saveData(){
   cacheLocal();
+  if(location.protocol === 'file:') return; // 本地预览：仅用 localStorage，不发网络请求
   fetch('/api/data', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -844,9 +887,10 @@ function getTodoItems(){
           stageId:order.currentStage, stageName:currentStage.name,
           docName:doc.name, docKey:doc.key, essential:doc.essential, type:'current'
         };
-        if(order.eta){
-          var daysUntilETA = Math.ceil((new Date(order.eta) - new Date(today)) / 86400000);
-          if(daysUntilETA <= 3) urgent.push({urgent:true,days:daysUntilETA,item:item});
+        if(order.shipDate){
+          var daysUntilShip = Math.ceil((new Date(order.shipDate) - new Date(today)) / 86400000);
+          // 当前节点在办单证：仅船期临近（0~3天）才算紧急；船期已过则视为"推进中"，不算逾期
+          if(daysUntilShip >= 0 && daysUntilShip <= 3) urgent.push({urgent:true,days:daysUntilShip,item:item});
           else normal.push(item);
         } else {
           normal.push(item);
@@ -873,6 +917,22 @@ function getTodoItems(){
   }
 
   return {urgent:urgent, normal:normal};
+}
+
+// 真正"卡住"的判定：当前节点之前的节点还有未完成单证，才算真正逾期
+function orderOverdueCount(order){
+  var stageIdx = -1;
+  for(var si=0; si<STAGES.length; si++){ if(STAGES[si].id === order.currentStage){ stageIdx=si; break; } }
+  if(stageIdx < 0) return 0;
+  var cnt = 0;
+  for(var pi=0; pi<stageIdx; pi++){
+    var ps = STAGES[pi];
+    for(var pdi=0; pdi<ps.docs.length; pdi++){
+      var psk = ps.id + '_' + ps.docs[pdi].key;
+      if((order.docStatus[psk]||'pending') === 'pending') cnt++;
+    }
+  }
+  return cnt;
 }
 
 function renderAlertStrip(){
@@ -925,7 +985,7 @@ function renderAlertDetail(){
     for(var ui=0; ui<urgent.length; ui++){
       var u = urgent[ui];
       var item = u.item;
-      var urgencyText = u.overdue ? '逾期未完成' : (u.days <= 0 ? '已到期！' : u.days + '天后出货');
+      var urgencyText = u.overdue ? '逾期未完成' : (u.days <= 0 ? '已到期！' : u.days + '天后开船');
       html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--danger-light);border-radius:6px;margin-bottom:4px;font-size:12px">';
       html += '<div><b>' + item.orderNo + '</b> ' + item.client + ' · ' + item.stageName + '<br>' + item.docName + ' <span style="color:var(--danger);font-weight:600">' + urgencyText + '</span></div>';
       html += '<button class="btn btn-xs btn-danger" onclick="quickJump(\'' + item.orderId + '\',\'' + item.stageId + '\');document.getElementById(\'alertDetail\').style.display=\'none\'">去处理</button>';
@@ -961,15 +1021,32 @@ function quickJump(orderId, stageId){
 }
 
 // ==================== ORDER LIST ====================
+function onOrderSearch(v){
+  orderSearchQuery = (v || '').trim();
+  renderOrderList();
+}
+
 function renderOrderList(){
   var container = document.getElementById('orderList');
   var countEl = document.getElementById('orderCount');
-  var list = (currentView === 'archive') ? archiveOrders : orders;
-  countEl.textContent = (currentView === 'archive' ? '归档 · ' : '') + list.length + ' 个订单';
+  var all = (currentView === 'archive') ? archiveOrders : orders;
 
-  if(list.length === 0){
+  var q = orderSearchQuery.toLowerCase();
+  var list = q ? all.filter(function(o){
+    return (o.orderNo||'').toLowerCase().indexOf(q) >= 0
+        || (o.client||'').toLowerCase().indexOf(q) >= 0
+        || (o.product||'').toLowerCase().indexOf(q) >= 0;
+  }) : all;
+
+  countEl.textContent = (currentView === 'archive' ? '归档 · ' : '') + list.length + (q ? '/' + all.length : '') + ' 个订单';
+
+  if(all.length === 0){
     var msg = (currentView === 'archive') ? '暂无归档订单' : '暂无订单';
     container.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:20px;font-size:13px">' + msg + '</div>';
+    return;
+  }
+  if(list.length === 0){
+    container.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:20px;font-size:13px">没有匹配的订单</div>';
     return;
   }
 
@@ -1001,19 +1078,134 @@ function renderOrderList(){
     }
 
     var badges = '';
-    if(overdueCount > 0) badges += '<span style="font-size:10px;color:#fff;background:var(--danger);padding:1px 5px;border-radius:6px;margin-left:4px">' + overdueCount + '逾期</span>';
-    if(pendingCount > 0) badges += '<span style="font-size:10px;color:#fff;background:var(--warning);padding:1px 5px;border-radius:6px;margin-left:4px">' + pendingCount + '待办</span>';
+    if(overdueCount > 0) badges += '<span style="font-size:10px;color:#fff;background:var(--danger);padding:1px 5px;border-radius:6px">' + overdueCount + '逾期</span>';
+    if(pendingCount > 0) badges += '<span style="font-size:10px;color:#fff;background:var(--warning);padding:1px 5px;border-radius:6px">' + pendingCount + '待办</span>';
 
-    html += '<div class="order-item' + active + '" onclick="selectOrder(\'' + order.id + '\')">';
-    html += '<div class="order-item-no">' + order.orderNo + badges + '</div>';
-    html += '<div class="order-item-client">' + order.client + '</div>';
-    html += '<div class="order-item-stage" style="background:' + colors.bg + ';color:' + colors.text + '">' + stageName + '</div>';
+    var showDrag = (currentView !== 'archive') && !orderSearchQuery;
+    html += '<div class="order-item' + active + '" data-id="' + order.id + '" onclick="selectOrder(\'' + order.id + '\')">';
+    if(showDrag) html += '<div class="drag-handle" title="拖拽排序"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></div>';
+    html += '<div class="order-item-main">';
+    html += '<div class="o-line1"><span class="order-item-no">' + order.orderNo + '</span><span class="order-item-client">' + order.client + '</span>' + (badges ? '<span style="margin-left:auto;display:inline-flex;gap:4px;align-items:center">' + badges + '</span>' : '') + '</div>';
+    html += '<div class="o-line2">';
+    if(order.product) html += '<span class="order-item-product">' + order.product + '</span>';
+    var rightGroup = '';
+    if(order.shipDate) rightGroup += '<span class="order-item-ship"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18l-2 7H5z"/><path d="M6 12V7h4v5"/><path d="M12 12V9h4v3"/><path d="M2 20c1.5 1 2.5-1 4 0s2.5 1 4 0 2.5-1 4 0 2.5 1 4 0"/></svg> ' + order.shipDate.replace(/^\d{4}-/,'') + '</span>';
+    if(stageName) rightGroup += '<span class="order-item-stage" style="background:' + colors.bg + ';color:' + colors.text + '">' + stageName + '</span>';
+    if(rightGroup) html += '<span style="margin-left:auto;display:inline-flex;align-items:center;gap:8px">' + rightGroup + '</span>';
+    html += '</div>';
+    html += '</div>';
     html += '</div>';
   }
   container.innerHTML = html;
 }
 
+// ==================== DRAG TO REORDER (pointer events: mouse + touch) ====================
+var dragCtx = null;
+var suppressClick = false;
+
+function initOrderDrag(){
+  var list = document.getElementById('orderList');
+  if(list) list.addEventListener('pointerdown', onDragPointerDown);
+}
+
+function onDragPointerDown(e){
+  if(currentView === 'archive') return;
+  var handle = e.target.closest('.drag-handle');
+  if(!handle) return;
+  var item = handle.closest('.order-item');
+  if(!item) return;
+  var rect = item.getBoundingClientRect();
+  dragCtx = {
+    id: item.getAttribute('data-id'),
+    el: item,
+    startX: e.clientX, startY: e.clientY,
+    offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top,
+    width: rect.width, height: rect.height,
+    started: false, ghost: null, placeholder: null
+  };
+  window.addEventListener('pointermove', onDragPointerMove);
+  window.addEventListener('pointerup', onDragPointerUp);
+  window.addEventListener('pointercancel', onDragPointerUp);
+}
+
+function onDragPointerMove(e){
+  if(!dragCtx) return;
+  if(!dragCtx.started){
+    if(Math.abs(e.clientX - dragCtx.startX) < 5 && Math.abs(e.clientY - dragCtx.startY) < 5) return;
+    dragCtx.started = true;
+    var el = dragCtx.el;
+    var ph = document.createElement('div');
+    ph.className = 'order-item-placeholder';
+    ph.style.height = dragCtx.height + 'px';
+    el.parentNode.insertBefore(ph, el);
+    dragCtx.placeholder = ph;
+    var ghost = el.cloneNode(true);
+    ghost.className = 'order-item drag-ghost';
+    ghost.style.width = dragCtx.width + 'px';
+    ghost.style.height = dragCtx.height + 'px';
+    document.body.appendChild(ghost);
+    dragCtx.ghost = ghost;
+    el.style.display = 'none';
+    document.body.style.cursor = 'grabbing';
+  }
+  dragCtx.ghost.style.left = (e.clientX - dragCtx.offsetX) + 'px';
+  dragCtx.ghost.style.top = (e.clientY - dragCtx.offsetY) + 'px';
+  var ph = dragCtx.placeholder;
+  var siblings = getDragSiblings();
+  var inserted = false;
+  for(var i=0;i<siblings.length;i++){
+    var r = siblings[i].getBoundingClientRect();
+    if(e.clientY < r.top + r.height/2){ ph.parentNode.insertBefore(ph, siblings[i]); inserted = true; break; }
+  }
+  if(!inserted) ph.parentNode.appendChild(ph);
+}
+
+function getDragSiblings(){
+  var list = document.getElementById('orderList');
+  var nodes = list.querySelectorAll('.order-item');
+  var arr = [];
+  for(var i=0;i<nodes.length;i++){ if(nodes[i] !== dragCtx.el) arr.push(nodes[i]); }
+  return arr;
+}
+
+function onDragPointerUp(){
+  window.removeEventListener('pointermove', onDragPointerMove);
+  window.removeEventListener('pointerup', onDragPointerUp);
+  window.removeEventListener('pointercancel', onDragPointerUp);
+  var ctx = dragCtx; dragCtx = null;
+  if(!ctx) return;
+  if(!ctx.started) return;
+  suppressClick = true;
+  setTimeout(function(){ suppressClick = false; }, 60);
+  var list = document.getElementById('orderList');
+  var ph = ctx.placeholder;
+  var placeholderIndex = 0;
+  for(var k=0;k<list.children.length;k++){
+    var c = list.children[k];
+    if(c === ph) break;
+    if(c.classList.contains('order-item') && c !== ctx.el) placeholderIndex++;
+  }
+  var map = {};
+  for(var m=0;m<orders.length;m++) map[orders[m].id] = orders[m];
+  var newOrders = [];
+  var items = list.querySelectorAll('.order-item');
+  for(var i=0;i<items.length;i++){
+    var id = items[i].getAttribute('data-id');
+    if(id === ctx.id) continue;
+    if(map[id]) newOrders.push(map[id]);
+  }
+  newOrders.splice(placeholderIndex, 0, map[ctx.id]);
+  orders = newOrders;
+  if(ctx.ghost && ctx.ghost.parentNode) ctx.ghost.parentNode.removeChild(ctx.ghost);
+  if(ctx.placeholder && ctx.placeholder.parentNode) ctx.placeholder.parentNode.removeChild(ctx.placeholder);
+  document.body.style.cursor = '';
+  ctx.el.style.display = '';
+  saveData();
+  renderOrderList();
+}
+
 function selectOrder(id){
+  if(suppressClick){ return; }
   selectedOrderId = id;
   renderAll();
 }
@@ -1071,6 +1263,7 @@ function renderMainContent(){
   html += '<span class="order-no-display">' + order.orderNo + '</span>';
   html += '<span class="order-client-display">' + order.client + '</span>';
   if(order.product) html += '<span class="order-product">' + order.product + '</span>';
+  if(order.shipDate) html += '<span class="order-ship-meta">船期: ' + order.shipDate + '</span>';
   html += '<span class="stage-badge" style="background:' + colors.bg + ';color:' + colors.text + '">' + currentStage.name + '</span>';
   if(currentView === 'archive') html += '<span style="font-size:11px;color:var(--gray-400)">归档于 ' + (order.archivedAt || '') + '</span>';
   html += '</div>';
@@ -1086,16 +1279,6 @@ function renderMainContent(){
   html += '</div>';
   html += '</div>';
 
-  // ETA info
-  if(order.eta){
-    var daysLeft = Math.ceil((new Date(order.eta) - new Date(dateStr(Date.now()))) / 86400000);
-    var etaStyle = '', etaText = '';
-    if(daysLeft < 0){etaStyle='color:var(--danger)';etaText='已逾期'+Math.abs(daysLeft)+'天';}
-    else if(daysLeft === 0){etaStyle='color:var(--danger)';etaText='今天出货！';}
-    else if(daysLeft <= 3){etaStyle='color:var(--warning)';etaText='距出货还有 '+daysLeft+' 天';}
-    else{etaStyle='color:var(--gray-500)';etaText='距出货还有 '+daysLeft+' 天';}
-    html += '<div style="font-size:12px;' + etaStyle + ';margin-bottom:16px">ETA: ' + order.eta + ' · ' + etaText + '</div>';
-  }
 
   // Stage timeline
   html += '<div class="stage-timeline">';
@@ -1302,6 +1485,7 @@ function editOrder(orderId){
   document.getElementById('inputClient').value = order.client;
   document.getElementById('inputProduct').value = order.product || '';
   document.getElementById('inputETA').value = order.eta || '';
+  document.getElementById('inputShipDate').value = order.shipDate || '';
   editingStage = order.currentStage;
   renderStagePills();
   document.getElementById('orderModal').style.display = 'flex';
@@ -1324,6 +1508,7 @@ function saveOrder(){
   var client = document.getElementById('inputClient').value.trim();
   var product = document.getElementById('inputProduct').value.trim();
   var eta = document.getElementById('inputETA').value;
+  var shipDate = document.getElementById('inputShipDate').value;
 
   if(!orderNo || !client){showToast('订单号和客户名称为必填');return;}
 
@@ -1335,6 +1520,7 @@ function saveOrder(){
     order.client = client;
     order.product = product;
     order.eta = eta;
+    order.shipDate = shipDate;
     order.currentStage = editingStage;
     // Ensure all stage docs have entries
     for(var si=0; si<STAGES.length; si++){
@@ -1359,6 +1545,7 @@ function saveOrder(){
       product: product,
       currentStage: editingStage,
       eta: eta,
+      shipDate: shipDate,
       docStatus: docStatus,
       notes: '',
       createdAt: dateStr(Date.now())
@@ -1711,7 +1898,26 @@ function gotoWorkbenchOrder(id){
 }
 
 // ==================== STARTUP ====================
-init();
+(function(){
+  if(location.protocol === 'file:'){
+    // 本地预览：无服务器，跳过登录遮罩直接进页面
+    document.getElementById('loginOverlay').classList.add('hidden');
+    window._appInited = true;
+    init();
+    initOrderDrag();
+    return;
+  }
+  fetch('/api/me').then(function(r){
+    if(r.ok){
+      document.getElementById('loginOverlay').classList.add('hidden');
+      window._appInited = true;
+      init();
+      initOrderDrag();
+    }
+  }).catch(function(){
+    // server unreachable / not authed -> show login overlay (default visible)
+  });
+})();
 </script>
 </body>
 </html>
