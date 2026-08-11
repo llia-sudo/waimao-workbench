@@ -7,9 +7,13 @@ services:
     branch: main
     buildCommand: npm install
     startCommand: npm start
-    healthCheckPath: /login.html
+    healthCheckPath: /
     envVars:
       - key: NODE_VERSION
         value: "22.22.2"
       - key: PASSWORD
         value: "siyueyue"
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: GIST_ID
+        sync: false
