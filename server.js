@@ -50,11 +50,13 @@ function ensureGist(cb) {
     var cfg = JSON.parse(fs.readFileSync(path.join(__dirname, 'gist-config.json'), 'utf-8'));
     if (cfg && cfg.gistId) { GIST_ID = cfg.gistId; cb(null, GIST_ID); return; }
   } catch (e) {}
-  // create a new private gist
+  // create a new private gist (GitHub requires at least one file)
+  var initialFiles = {};
+  initialFiles[GIST_FILE] = { content: JSON.stringify({ orders: [], archiveOrders: [] }, null, 2) };
   ghFetch('POST', 'https://api.github.com/gists', {
     description: 'waimao-workbench-data',
     public: false,
-    files: {}
+    files: initialFiles
   }).then(function(data) {
     GIST_ID = data.id;
     try { fs.writeFileSync(path.join(__dirname, 'gist-config.json'), JSON.stringify({ gistId: GIST_ID })); } catch (e) {}
