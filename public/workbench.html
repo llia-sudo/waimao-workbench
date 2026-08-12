@@ -110,6 +110,7 @@ body{
   font-size:11px;flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;
   padding:2px 8px;border-radius:9px;font-weight:600;white-space:nowrap;
 }
+.order-item-sailed{font-size:10px;color:#fff;background:var(--primary);padding:1px 6px;border-radius:6px;font-weight:600;white-space:nowrap;flex:0 0 auto}
 .order-item-actions{display:flex;gap:4px;margin-top:6px}
 .order-item-placeholder{background:#fce7f3;border:2px dashed #f9a8d4;border-radius:var(--radius);margin-bottom:0;box-sizing:border-box}
 .drag-ghost{position:fixed;z-index:9999;pointer-events:none;background:#fff;border:2px solid var(--primary);border-radius:var(--radius);box-shadow:0 10px 28px rgba(236,72,153,.25);padding:7px 10px;box-sizing:border-box;opacity:.97}
@@ -719,7 +720,7 @@ function getExampleOrders(){
   return [
     {
       id:'ex1',orderNo:'PO2026001',client:'ABC Trading Co., Ltd.',product:'Stainless Steel Cookware Set',
-      currentStage:'confirmation',eta:ds(now+21*86400000),shipDate:ds(now+18*86400000),
+      currentStage:'confirmation',eta:ds(now+21*86400000),shipDate:ds(now-3*86400000),
       docStatus:{confirmation_pi:'pending'},
       notes:'新客户首单，需确认付款方式 T/T 30% deposit',createdAt:ds(now-2*86400000)
     },
@@ -1077,15 +1078,15 @@ function renderOrderList(){
       }
     }
 
-    var badges = '';
-    if(overdueCount > 0) badges += '<span style="font-size:10px;color:#fff;background:var(--danger);padding:1px 5px;border-radius:6px">' + overdueCount + '逾期</span>';
-    if(pendingCount > 0) badges += '<span style="font-size:10px;color:#fff;background:var(--warning);padding:1px 5px;border-radius:6px">' + pendingCount + '待办</span>';
+    // 右上角标签：船期已过（船已开走）才显示粉色"已开"；逾期/待办不再在卡片上展示
+    var todayStr = dateStr(Date.now());
+    var sailedTag = (order.shipDate && order.shipDate < todayStr) ? '<span class="order-item-sailed">已开</span>' : '';
 
     var showDrag = (currentView !== 'archive') && !orderSearchQuery;
     html += '<div class="order-item' + active + '" data-id="' + order.id + '" onclick="selectOrder(\'' + order.id + '\')">';
     if(showDrag) html += '<div class="drag-handle" title="拖拽排序"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></div>';
     html += '<div class="order-item-main">';
-    html += '<div class="o-line1"><span class="order-item-no">' + order.orderNo + '</span><span class="order-item-client">' + order.client + '</span>' + (badges ? '<span style="margin-left:auto;display:inline-flex;gap:4px;align-items:center">' + badges + '</span>' : '') + '</div>';
+    html += '<div class="o-line1"><span class="order-item-no">' + order.orderNo + '</span><span class="order-item-client">' + order.client + '</span>' + (sailedTag ? '<span style="margin-left:auto">' + sailedTag + '</span>' : '') + '</div>';
     html += '<div class="o-line2">';
     if(order.product) html += '<span class="order-item-product">' + order.product + '</span>';
     var rightGroup = '';
